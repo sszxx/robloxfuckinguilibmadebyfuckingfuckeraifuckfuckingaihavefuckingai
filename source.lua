@@ -291,10 +291,10 @@ function Library:AddWindow(name)
 	Create("ImageLabel", {
 		Parent = Bomb,
 		BackgroundTransparency = 1,
-		Image = GetAsset("https://www.shutterstock.com/image-vector/bomb-dynamite-simple-logo-white-260nw-1696462141.jpg"),
+		Image = GetAsset("https://i.postimg.cc/TP1s3fMf/image-Photoroom-(45).png"), -- Bomb Icon
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 16, 0, 16),
+		Size = UDim2.new(0, 20, 0, 20),
 		ImageColor3 = Color3.fromRGB(200, 50, 50),
 		ZIndex = 6
 	})
@@ -313,10 +313,10 @@ function Library:AddWindow(name)
 	Create("ImageLabel", {
 		Parent = Gear,
 		BackgroundTransparency = 1,
-		Image = GetAsset("https://www.freeiconspng.com/uploads/white-gear-png-gear-icon-png-white-gear-icon-30.png"),
+		Image = GetAsset("https://i.postimg.cc/rsXZj4dD/image.png"), -- Gear Icon
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 16, 0, 16),
+		Size = UDim2.new(0, 20, 0, 20),
 		ImageColor3 = CurrentTheme.Text,
 		ZIndex = 6
 	})
