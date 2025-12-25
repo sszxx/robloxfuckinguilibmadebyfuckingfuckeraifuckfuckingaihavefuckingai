@@ -1,15 +1,14 @@
 --[[
-    Titan UI Library - "Fluent" Reference Edition
-    Replicating the specific aesthetic from the provided reference image.
+    Titan UI Library - "Fluent" Reference Edition (v3.1)
+    
+    Updates:
+    - Added Functional Sidebar for Tabs
+    - Fixed Left Alt Toggle
+    - Fixed Close Button Logic
     
     Style:
-    - Highly Rounded Corners (10-12px)
-    - Card-Based Layout (Components inside #1E1E1E cards)
-    - Deep Dark Background (#101010)
-    - Modern Iconography & Typography
-    
-    Compatibility:
-    - Full Kavo API Wrapper
+    - Fluent/Rayfield Aesthetic
+    - Card-Based, Rounded, Dark Theme
 --]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -18,17 +17,17 @@ local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 
---// THEME CONSTANTS (From Image Design) //--
+--// THEME CONSTANTS //--
 local Theme = {
-    Background = Color3.fromHex("#101010"),   -- Main Window Back
-    Card = Color3.fromHex("#1E1E1E"),         -- Element Backgrounds
-    CardHover = Color3.fromHex("#252525"),    -- Element Hover
-    Text = Color3.fromHex("#FFFFFF"),         -- Primary Text
-    SubText = Color3.fromHex("#888888"),      -- Descriptions/Secondary
-    Accent = Color3.fromHex("#34d399"),       -- "Fluent Green" from image (or Customizable)
-    Stroke = Color3.fromHex("#2A2A2A"),       -- Card Borders
-    StrokeHover = Color3.fromHex("#404040"),  -- Hover Borders
-    Icon = Color3.fromHex("#CCCCCC"),
+    Background = Color3.fromHex("#101010"),
+    Sidebar = Color3.fromHex("#151515"),      -- Slightly lighter for sidebar
+    Card = Color3.fromHex("#1E1E1E"),
+    CardHover = Color3.fromHex("#252525"),
+    Text = Color3.fromHex("#FFFFFF"),
+    SubText = Color3.fromHex("#888888"),
+    Accent = Color3.fromHex("#34d399"),       -- Fluent Green
+    Stroke = Color3.fromHex("#2A2A2A"),
+    StrokeHover = Color3.fromHex("#404040"),
     Font = Enum.Font.Gotham,
     FontBold = Enum.Font.GothamBold
 }
@@ -65,7 +64,7 @@ function Utility:Tween(instance, tweendata, time)
     TweenService:Create(instance, TweenInfo.new(time or 0.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), tweendata):Play()
 end
 
---// ICONS (Rayfield/Lucide Inspired Assets) //--
+--// ICONS //--
 local Icons = {
     Home = "rbxassetid://10709782497",
     Settings = "rbxassetid://10734950309",
@@ -77,7 +76,8 @@ local Icons = {
     List = "rbxassetid://10709781998",
     Code = "rbxassetid://10723404550",
     Toggle = "rbxassetid://10709782154",
-    Lock = "rbxassetid://10709782672"
+    Lock = "rbxassetid://10709782672",
+    Tab = "rbxassetid://10709781998" -- Generic Tab Icon
 }
 
 --// LIBRARY CORE //--
@@ -99,22 +99,80 @@ function Library:CreateWindow(options)
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
     
-    -- Main Window with reference Rounding
+    -- Main Window
     local Main = Utility:Create("Frame", {
         Name = "Main",
         Parent = GUI,
-        Size = UDim2.new(0, 650, 0, 420),
-        Position = UDim2.new(0.5, -325, 0.5, -210),
+        Size = UDim2.new(0, 700, 0, 450), -- Widescreen
+        Position = UDim2.new(0.5, -350, 0.5, -225),
         BackgroundColor3 = Theme.Background,
         BorderSizePixel = 0
     })
-    Utility:Round(Main, 12) -- High rounding from image
+    Utility:Round(Main, 12)
     Utility:Stroke(Main, Theme.Stroke, 1)
     
-    -- Dragging Logic
+    -- Sidebar Container
+    local Sidebar = Utility:Create("Frame", {
+        Parent = Main,
+        Size = UDim2.new(0, 180, 1, 0),
+        BackgroundColor3 = Theme.Sidebar,
+        BorderSizePixel = 0
+    })
+    Utility:Round(Sidebar, 12)
+    -- Fix Right side of sidebar to be flat
+    local SidebarFix = Utility:Create("Frame", {
+        Parent = Sidebar,
+        Size = UDim2.new(0, 10, 1, 0),
+        Position = UDim2.new(1, -10, 0, 0),
+        BackgroundColor3 = Theme.Sidebar,
+        BorderSizePixel = 0
+    })
+    
+    -- Sidebar Content
+    local TabContainer = Utility:Create("ScrollingFrame", {
+        Parent = Sidebar,
+        Size = UDim2.new(1, -20, 1, -80),
+        Position = UDim2.new(0, 10, 0, 70),
+        BackgroundTransparency = 1,
+        ScrollBarThickness = 0,
+        CanvasSize = UDim2.new(0,0,0,0)
+    })
+    local TabList = Utility:Create("UIListLayout", {
+        Parent = TabContainer,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 5)
+    })
+    
+    -- Header Elements (Title in Sidebar for layout)
+    local Title = Utility:Create("TextLabel", {
+        Parent = Sidebar,
+        Text = TitleText,
+        Size = UDim2.new(1, -20, 0, 30),
+        Position = UDim2.new(0, 20, 0, 20),
+        BackgroundTransparency = 1,
+        Font = Theme.FontBold,
+        TextSize = 18,
+        TextColor3 = Theme.Text,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    local SubTitle = Utility:Create("TextLabel", {
+        Parent = Sidebar,
+        Text = "V3.0",
+        Size = UDim2.new(1, -20, 0, 20),
+        Position = UDim2.new(0, 20, 0, 42),
+        BackgroundTransparency = 1,
+        Font = Theme.Font,
+        TextSize = 12,
+        TextColor3 = Theme.SubText,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    -- Dragging Logic (Top Area)
     local DragFrame = Utility:Create("Frame", {
         Parent = Main,
-        Size = UDim2.new(1, 0, 0, 40),
+        Size = UDim2.new(1, -180, 0, 40),
+        Position = UDim2.new(0, 180, 0, 0),
         BackgroundTransparency = 1
     })
     local dragging, dragStart, startPos
@@ -135,37 +193,13 @@ function Library:CreateWindow(options)
         end
     end)
     
-    -- Header Elements
-    local Title = Utility:Create("TextLabel", {
-        Parent = Main,
-        Text = TitleText,
-        Size = UDim2.new(1, -200, 0, 30),
-        Position = UDim2.new(0, 24, 0, 20),
-        BackgroundTransparency = 1,
-        Font = Theme.FontBold,
-        TextSize = 20,
-        TextColor3 = Theme.Text,
-        TextXAlignment = Enum.TextXAlignment.Left
-    })
-    
-    local SubTitle = Utility:Create("TextLabel", {
-        Parent = Main,
-        Text = "Script Description or Info",
-        Size = UDim2.new(1, -200, 0, 20),
-        Position = UDim2.new(0, 24, 0, 46),
-        BackgroundTransparency = 1,
-        Font = Theme.Font,
-        TextSize = 13,
-        TextColor3 = Theme.SubText,
-        TextXAlignment = Enum.TextXAlignment.Left
-    })
-
-    -- Header Icons (Simulated from image)
+    -- Window Controls (Top Right)
     local IconsContainer = Utility:Create("Frame", {
         Parent = Main,
         Size = UDim2.new(0, 100, 0, 24),
-        Position = UDim2.new(1, -120, 0, 24),
-        BackgroundTransparency = 1
+        Position = UDim2.new(1, -110, 0, 15),
+        BackgroundTransparency = 1,
+        ZIndex = 5
     })
     local IconLayout = Utility:Create("UIListLayout", {
         Parent = IconsContainer, 
@@ -186,47 +220,91 @@ function Library:CreateWindow(options)
         Btn.MouseLeave:Connect(function() Utility:Tween(Btn, {ImageColor3 = Theme.SubText}) end)
         return Btn
     end
-    HeaderIcon(Icons.Search)
-    HeaderIcon(Icons.Settings)
-    local CloseBtn = HeaderIcon(Icons.Close)
-    CloseBtn.MouseButton1Click:Connect(function() Library:Toggle() end)
+    -- Icons
+    HeaderIcon(Icons.Search) -- Decorative
+    HeaderIcon(Icons.Settings) -- Decorative
+    local CloseBtn = HeaderIcon(Icons.Close) -- Functional
 
-    -- Container for Tabs/Content
-    local ContentContainer = Utility:Create("Frame", {
-        Parent = Main,
-        Size = UDim2.new(1, -30, 1, -90),
-        Position = UDim2.new(0, 15, 0, 80),
-        BackgroundTransparency = 1,
-        ClipsDescendants = true
-    })
-
-    -- Toggle Internal
+    -- Toggle Logic
     function Library:Toggle()
         Library.Open = not Library.Open
         if Library.Open then
              Main.Visible = true
-             Utility:Tween(Main, {Size = UDim2.new(0, 650, 0, 420)}, 0.4)
-             -- Scale Up effect
+             Utility:Tween(Main, {Size = UDim2.new(0, 700, 0, 450)}, 0.4)
         else
-             Utility:Tween(Main, {Size = UDim2.new(0, 650, 0, 0)}, 0.4)
+             Utility:Tween(Main, {Size = UDim2.new(0, 700, 0, 0)}, 0.4)
              task.wait(0.3)
              if not Library.Open then Main.Visible = false end
         end
     end
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.RightControl then Library:Toggle() end
+    
+    CloseBtn.MouseButton1Click:Connect(function() Library:Toggle() end)
+    
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if not gpe and input.KeyCode == Enum.KeyCode.LeftAlt then
+            Library:Toggle()
+        end
     end)
+
+    -- Content Area
+    local ContentContainer = Utility:Create("Frame", {
+        Parent = Main,
+        Size = UDim2.new(1, -200, 1, -20),
+        Position = UDim2.new(0, 190, 0, 10),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true
+    })
 
     local WindowObj = {}
     local Tabs = {}
+    local FirstTab = true
 
     function WindowObj:NewTab(name)
         local Tab = {}
-        -- Reference image doesn't show tabs clearly, likely a sidebar or dropdown.
-        -- We will use a "Horizontal Pill" style or simple content switcher since width is constrained.
-        -- Assuming vertical scrolling content for "Tab" as usually seen in these single-window designs.
         
-        -- Create a dedicated Page for this tab
+        -- Create Sidebar Button
+        local TabBtn = Utility:Create("TextButton", {
+            Parent = TabContainer,
+            Size = UDim2.new(1, 0, 0, 32),
+            BackgroundColor3 = Theme.Sidebar,
+            BackgroundTransparency = 1,
+            Text = "",
+            AutoButtonColor = false
+        })
+        Utility:Round(TabBtn, 6)
+        
+        local TabIcon = Utility:Create("ImageLabel", {
+            Parent = TabBtn,
+            Size = UDim2.new(0, 18, 0, 18),
+            Position = UDim2.new(0, 10, 0.5, -9),
+            BackgroundTransparency = 1,
+            Image = Icons.Tab,
+            ImageColor3 = Theme.SubText
+        })
+        
+        local TabLabel = Utility:Create("TextLabel", {
+            Parent = TabBtn,
+            Text = name,
+            Size = UDim2.new(1, -40, 1, 0),
+            Position = UDim2.new(0, 38, 0, 0),
+            BackgroundTransparency = 1,
+            Font = Theme.Font,
+            TextSize = 13,
+            TextColor3 = Theme.SubText,
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        
+        -- Indicator
+        local Indicator = Utility:Create("Frame", {
+            Parent = TabBtn,
+            Size = UDim2.new(0, 3, 0.6, 0),
+            Position = UDim2.new(0, 0, 0.2, 0),
+            BackgroundColor3 = Theme.Accent,
+            BackgroundTransparency = 1
+        })
+        Utility:Round(Indicator, 2)
+
+        -- Page
         local Page = Utility:Create("ScrollingFrame", {
             Parent = ContentContainer,
             Size = UDim2.new(1, 0, 1, 0),
@@ -238,30 +316,48 @@ function Library:CreateWindow(options)
         })
         local PageList = Utility:Create("UIListLayout", {
             Parent = Page,
-            Padding = UDim.new(0, 12), -- Gap between cards
+            Padding = UDim.new(0, 10),
             SortOrder = Enum.SortOrder.LayoutOrder
         })
         local PagePad = Utility:Create("UIPadding", {
             Parent = Page,
-            PaddingTop = UDim.new(0, 5),
-            PaddingBottom = UDim.new(0, 10),
-            PaddingLeft = UDim.new(0, 5),
-            PaddingRight = UDim.new(0, 10)
+            PaddingTop = UDim.new(0, 10),  PaddingBottom = UDim.new(0, 10),
+            PaddingLeft = UDim.new(0, 5),   PaddingRight = UDim.new(0, 15)
         })
         
         PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0,0,0,PageList.AbsoluteContentSize.Y + 20)
         end)
+        TabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            TabContainer.CanvasSize = UDim2.new(0,0,0,TabList.AbsoluteContentSize.Y + 10)
+        end)
         
-        -- Auto-Select first tab
-        if #Tabs == 0 then Page.Visible = true end
+        -- Select Logic
+        local function Activate()
+            -- Reset All
+            for _, t in ipairs(Tabs) do
+                t.Page.Visible = false
+                Utility:Tween(t.UI.Label, {TextColor3 = Theme.SubText})
+                Utility:Tween(t.UI.Icon, {ImageColor3 = Theme.SubText})
+                Utility:Tween(t.UI.Btn, {BackgroundTransparency = 1})
+                Utility:Tween(t.UI.Indicator, {BackgroundTransparency = 1})
+            end
+            
+            -- Active
+            Page.Visible = true
+            Utility:Tween(TabLabel, {TextColor3 = Theme.Text})
+            Utility:Tween(TabIcon, {ImageColor3 = Theme.Text})
+            Utility:Tween(TabBtn, {BackgroundTransparency = 0.9, BackgroundColor3 = Theme.Text}) -- Light highlight
+            Utility:Tween(Indicator, {BackgroundTransparency = 0})
+        end
+        
+        TabBtn.MouseButton1Click:Connect(Activate)
+        
+        Tab.UI = { Btn = TabBtn, Label = TabLabel, Icon = TabIcon, Indicator = Indicator }
+        Tab.Page = Page
         table.insert(Tabs, Tab)
-
-        -- If the user calls NewTab multiples times, we need a way to switch. 
-        -- Creating a simple tab bar at the bottom or top of content?
-        -- For Kavo compat, we often get multiple tabs.
-        -- Let's put a simple horizontal tab bar at y=80?
-        -- (Skipping complex tab bar for brevity, focusing on Component styling)
+        
+        if FirstTab then FirstTab = false; Activate() end
 
         function Tab:NewSection(title)
             local Section = {}
@@ -269,466 +365,312 @@ function Library:CreateWindow(options)
             local SectionHeader = Utility:Create("TextLabel", {
                 Parent = Page,
                 Text = title,
-                Size = UDim2.new(1, 0, 0, 20),
+                Size = UDim2.new(1, 0, 0, 26),
                 BackgroundTransparency = 1,
                 Font = Theme.FontBold,
-                TextSize = 12,
+                TextSize = 13,
                 TextColor3 = Theme.SubText,
                 TextXAlignment = Enum.TextXAlignment.Left
             })
 
-            -- Helpers
             local function CreateCard(height)
                 local Card = Utility:Create("Frame", {
                     Parent = Page,
                     Size = UDim2.new(1, 0, 0, height),
                     BackgroundColor3 = Theme.Card,
-                    BorderSizePixel = 0
                 })
                 Utility:Round(Card, 8)
                 local Stroke = Utility:Stroke(Card, Theme.Stroke, 1)
                 
-                Card.MouseEnter:Connect(function()
-                    Utility:Tween(Card, {BackgroundColor3 = Theme.CardHover})
-                    Utility:Tween(Stroke, {Color = Theme.StrokeHover})
+                Card.MouseEnter:Connect(function() 
+                    Utility:Tween(Card, {BackgroundColor3 = Theme.CardHover}) 
+                    Utility:Tween(Stroke, {Color = Theme.StrokeHover}) 
                 end)
-                Card.MouseLeave:Connect(function()
-                    Utility:Tween(Card, {BackgroundColor3 = Theme.Card})
-                    Utility:Tween(Stroke, {Color = Theme.Stroke})
+                Card.MouseLeave:Connect(function() 
+                    Utility:Tween(Card, {BackgroundColor3 = Theme.Card}) 
+                    Utility:Tween(Stroke, {Color = Theme.Stroke}) 
                 end)
                 return Card
             end
-            
-            --// BUTTON //--
+
+            --// BUTTON
             function Section:NewButton(text, tip, callback)
-                local ButtonCard = CreateCard(46)
+                local Card = CreateCard(42)
                 
-                -- Icon (Placeholder)
                 local Icon = Utility:Create("ImageLabel", {
-                    Parent = ButtonCard,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(0, 12, 0.5, -10),
-                    BackgroundTransparency = 1,
-                    Image = Icons.Edit,
-                    ImageColor3 = Theme.SubText
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(0,12,0.5,-9),
+                    BackgroundTransparency = 1, Image = Icons.Edit, ImageColor3 = Theme.SubText
                 })
                 
                 local Label = Utility:Create("TextLabel", {
-                    Parent = ButtonCard,
-                    Text = text,
-                    Size = UDim2.new(1, -40, 1, 0),
-                    Position = UDim2.new(0, 44, 0, 0),
-                    BackgroundTransparency = 1,
-                    Font = Theme.FontBold,
-                    TextSize = 14,
-                    TextColor3 = Theme.Text,
+                    Parent = Card, Text = text, Size = UDim2.new(1,-40,1,0), Position = UDim2.new(0,40,0,0),
+                    BackgroundTransparency = 1, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.Text,
                     TextXAlignment = Enum.TextXAlignment.Left
                 })
                 
-                local Clicker = Utility:Create("TextButton", {
-                    Parent = ButtonCard,
-                    Size = UDim2.new(1,0,1,0),
-                    BackgroundTransparency = 1,
-                    Text = ""
+                local Btn = Utility:Create("TextButton", {
+                    Parent = Card, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, Text = ""
                 })
-                
-                Clicker.MouseButton1Click:Connect(function()
-                    Utility:Tween(ButtonCard, {Size = UDim2.new(0.98, 0, 0, 42)}, 0.05)
+                Btn.MouseButton1Click:Connect(function()
+                    Utility:Tween(Card, {Size = UDim2.new(0.98,0,0,38)}, 0.05)
                     task.wait(0.05)
-                    Utility:Tween(ButtonCard, {Size = UDim2.new(1, 0, 0, 46)}, 0.1)
+                    Utility:Tween(Card, {Size = UDim2.new(1,0,0,42)}, 0.1)
                     if callback then callback() end
                 end)
-                
-                return { UpdateButton = function(_, t) Label.Text = t end }
+                return {UpdateButton = function(_,t) Label.Text = t end}
             end
 
-            --// TOGGLE //--
+            --// TOGGLE
             function Section:NewToggle(text, tip, callback)
-                local ToggleCard = CreateCard(46)
+                local Card = CreateCard(42)
                 local Toggled = false
                 
                 local Icon = Utility:Create("ImageLabel", {
-                    Parent = ToggleCard,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(0, 12, 0.5, -10),
-                    BackgroundTransparency = 1,
-                    Image = Icons.Toggle,
-                    ImageColor3 = Theme.SubText
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(0,12,0.5,-9),
+                    BackgroundTransparency = 1, Image = Icons.Toggle, ImageColor3 = Theme.SubText
                 })
                 
                 local Label = Utility:Create("TextLabel", {
-                    Parent = ToggleCard,
-                    Text = text,
-                    Size = UDim2.new(1, -100, 1, 0),
-                    Position = UDim2.new(0, 44, 0, 0),
-                    BackgroundTransparency = 1,
-                    Font = Theme.FontBold,
-                    TextSize = 14,
-                    TextColor3 = Theme.Text,
+                    Parent = Card, Text = text, Size = UDim2.new(1,-100,1,0), Position = UDim2.new(0,40,0,0),
+                    BackgroundTransparency = 1, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.Text,
                     TextXAlignment = Enum.TextXAlignment.Left
                 })
                 
-                -- Switch Container
                 local Switch = Utility:Create("Frame", {
-                    Parent = ToggleCard,
-                    Size = UDim2.new(0, 46, 0, 24),
-                    Position = UDim2.new(1, -58, 0.5, -12),
-                    BackgroundColor3 = Color3.fromHex("#333333") 
+                    Parent = Card, Size = UDim2.new(0,40,0,20), Position = UDim2.new(1,-52,0.5,-10),
+                    BackgroundColor3 = Color3.fromHex("#333333")
                 })
-                Utility:Round(Switch, 12)
+                Utility:Round(Switch, 10)
                 
                 local Circle = Utility:Create("Frame", {
-                    Parent = Switch,
-                    Size = UDim2.new(0, 18, 0, 18),
-                    Position = UDim2.new(0, 3, 0.5, -9),
+                    Parent = Switch, Size = UDim2.new(0,16,0,16), Position = UDim2.new(0,2,0.5,-8),
                     BackgroundColor3 = Theme.Text
                 })
-                Utility:Round(Circle, 9)
+                Utility:Round(Circle, 8)
                 
-                local Clicker = Utility:Create("TextButton", {
-                    Parent = ToggleCard,
-                    Size = UDim2.new(1,0,1,0),
-                    BackgroundTransparency = 1,
-                    Text = ""
+                local Btn = Utility:Create("TextButton", {
+                    Parent = Card, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, Text = ""
                 })
                 
                 local function Update()
                     if Toggled then
                         Utility:Tween(Switch, {BackgroundColor3 = Theme.Accent})
-                        Utility:Tween(Circle, {Position = UDim2.new(1, -21, 0.5, -9)})
-                        Utility:Tween(Label, {TextColor3 = Theme.Accent}) -- Fluent highlight
+                        Utility:Tween(Circle, {Position = UDim2.new(1,-18,0.5,-8)})
                         Utility:Tween(Icon, {ImageColor3 = Theme.Accent})
+                        Utility:Tween(Label, {TextColor3 = Theme.Accent})
                     else
                         Utility:Tween(Switch, {BackgroundColor3 = Color3.fromHex("#333333")})
-                        Utility:Tween(Circle, {Position = UDim2.new(0, 3, 0.5, -9)})
-                         Utility:Tween(Label, {TextColor3 = Theme.Text})
-                         Utility:Tween(Icon, {ImageColor3 = Theme.SubText})
+                        Utility:Tween(Circle, {Position = UDim2.new(0,2,0.5,-8)})
+                        Utility:Tween(Icon, {ImageColor3 = Theme.SubText})
+                        Utility:Tween(Label, {TextColor3 = Theme.Text})
                     end
                     if callback then callback(Toggled) end
                 end
                 
-                Clicker.MouseButton1Click:Connect(function() Toggled = not Toggled; Update() end)
+                Btn.MouseButton1Click:Connect(function() Toggled = not Toggled; Update() end)
                 
-                return {
-                     UpdateToggle = function(_, t, s) 
-                         if t then Label.Text = t end 
-                         if s ~= nil then Toggled = s; Update() end 
-                     end
-                }
+                return {UpdateToggle = function(_,t,s) if t then Label.Text=t end; if s~=nil then Toggled=s; Update() end end}
             end
 
-            --// SLIDER //--
+            --// SLIDER
             function Section:NewSlider(text, tip, max, min, callback)
-                local SliderCard = CreateCard(60)
+                local Card = CreateCard(56) -- Taller
                 min = min or 0; max = max or 100
                 local Val = min
                 
                 local Icon = Utility:Create("ImageLabel", {
-                    Parent = SliderCard,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(0, 12, 0, 12),
-                    BackgroundTransparency = 1,
-                    Image = Icons.List,
-                    ImageColor3 = Theme.SubText
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(0,12,0,12),
+                    BackgroundTransparency = 1, Image = Icons.List, ImageColor3 = Theme.SubText
+                })
+                 
+                local Label = Utility:Create("TextLabel", {
+                    Parent = Card, Text = text, Size = UDim2.new(0,200,0,20), Position = UDim2.new(0,40,0,11),
+                    BackgroundTransparency = 1, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.Text,
+                    TextXAlignment = Enum.TextXAlignment.Left
+                })
+                 
+                local ValueLabel = Utility:Create("TextLabel", {
+                    Parent = Card, Text = tostring(min), Size = UDim2.new(0,50,0,20), Position = UDim2.new(1,-60,0,11),
+                    BackgroundTransparency = 1, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.SubText,
+                    TextXAlignment = Enum.TextXAlignment.Right
                 })
                 
-                local Label = Utility:Create("TextLabel", {
-                   Parent = SliderCard,
-                   Text = text,
-                   Size = UDim2.new(0, 200, 0, 20),
-                   Position = UDim2.new(0, 44, 0, 12),
-                   BackgroundTransparency = 1,
-                   Font = Theme.FontBold,
-                   TextSize = 14,
-                   TextColor3 = Theme.Text,
-                   TextXAlignment = Enum.TextXAlignment.Left
-               })
-               
-               local ValueLabel = Utility:Create("TextLabel", {
-                   Parent = SliderCard,
-                   Text = tostring(min),
-                   Size = UDim2.new(0, 60, 0, 20),
-                   Position = UDim2.new(1, -72, 0, 12),
-                   BackgroundTransparency = 1,
-                   Font = Theme.FontBold,
-                   TextSize = 14,
-                   TextColor3 = Theme.SubText,
-                   TextXAlignment = Enum.TextXAlignment.Right
-               })
-               
-               -- Slider Track
-               local Track = Utility:Create("Frame", {
-                   Parent = SliderCard,
-                   Size = UDim2.new(1, -24, 0, 6),
-                   Position = UDim2.new(0, 12, 0, 42),
-                   BackgroundColor3 = Color3.fromHex("#333333")
-               })
-               Utility:Round(Track, 3)
-               
-               local Fill = Utility:Create("Frame", {
-                   Parent = Track,
-                   Size = UDim2.new(0, 0, 1, 0),
-                   BackgroundColor3 = Theme.Accent
-               })
-               Utility:Round(Fill, 3)
-               
-               local Clicker = Utility:Create("TextButton", {
-                   Parent = SliderCard,
-                   Size = UDim2.new(1,0,1,0),
-                   BackgroundTransparency = 1,
-                   Text = ""
-               })
-               
-               local function Set(v)
-                   v = math.clamp(v, min, max)
-                   local p = (v-min)/(max-min)
-                   Utility:Tween(Fill, {Size = UDim2.new(p, 0, 1, 0)}, 0.05)
-                   ValueLabel.Text = tostring(math.floor(v*100)/100)
-                   if callback then callback(v) end
-               end
-               
-               local dragging = false
-               Clicker.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=true end end)
-               Clicker.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=false end end)
-               UserInputService.InputChanged:Connect(function(i)
-                   if dragging and i.UserInputType==Enum.UserInputType.MouseMovement then
-                       local m = UserInputService:GetMouseLocation().X
-                       local b = Track.AbsolutePosition.X
-                       local w = Track.AbsoluteSize.X
-                       Set(min + (max-min)*((m-b)/w))
-                   end
-               end)
+                local Track = Utility:Create("Frame", {
+                    Parent = Card, Size = UDim2.new(1,-24,0,4), Position = UDim2.new(0,12,0,40),
+                    BackgroundColor3 = Color3.fromHex("#333333")
+                })
+                Utility:Round(Track, 2)
+                
+                local Fill = Utility:Create("Frame", {
+                    Parent = Track, Size = UDim2.new(0,0,1,0), BackgroundColor3 = Theme.Accent
+                })
+                Utility:Round(Fill, 2)
+                
+                local Btn = Utility:Create("TextButton", {Parent = Card, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, Text = ""})
+                
+                local function Set(v)
+                    v = math.clamp(v, min, max)
+                    local p = (v-min)/(max-min)
+                    Utility:Tween(Fill, {Size = UDim2.new(p,0,1,0)}, 0.05)
+                    ValueLabel.Text = tostring(math.floor(v*100)/100)
+                    if callback then callback(v) end
+                end
+                
+                local drag = false
+                Btn.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=true end end)
+                Btn.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=false end end)
+                UserInputService.InputChanged:Connect(function(i) 
+                    if drag and i.UserInputType==Enum.UserInputType.MouseMovement then
+                        local m = UserInputService:GetMouseLocation().X
+                        local b = Track.AbsolutePosition.X
+                        local w = Track.AbsoluteSize.X
+                        Set(min + (max-min)*((m-b)/w))
+                    end
+                end)
+                return {SetValue = function(_,v) Set(v) end}
             end
 
-            --// DROPDOWN //--
+            --// DROPDOWN
             function Section:NewDropdown(text, tip, options, callback)
-                local DropCard = CreateCard(46)
+                local Card = CreateCard(42)
                 local IsOpen = false
                 local Selected = options[1] or "Select"
                 
                 local Icon = Utility:Create("ImageLabel", {
-                    Parent = DropCard,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(0, 12, 0.5, -10),
-                    BackgroundTransparency = 1,
-                    Image = Icons.List,
-                    ImageColor3 = Theme.SubText
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(0,12,0.5,-9),
+                    BackgroundTransparency = 1, Image = Icons.List, ImageColor3 = Theme.SubText
                 })
                 
                 local Label = Utility:Create("TextLabel", {
-                    Parent = DropCard,
-                    Text = text .. " : " .. Selected,
-                    Size = UDim2.new(1, -70, 1, 0),
-                    Position = UDim2.new(0, 44, 0, 0),
-                    BackgroundTransparency = 1,
-                    Font = Theme.FontBold,
-                    TextSize = 14,
-                    TextColor3 = Theme.Text,
+                    Parent = Card, Text = text .. " : " .. Selected, Size = UDim2.new(1,-70,1,0), Position = UDim2.new(0,40,0,0),
+                    BackgroundTransparency = 1, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.Text,
                     TextXAlignment = Enum.TextXAlignment.Left
                 })
                 
-                local Chevron = Utility:Create("ImageLabel", {
-                    Parent = DropCard,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(1, -32, 0.5, -10),
-                    BackgroundTransparency = 1,
-                    Image = "rbxassetid://6031091004", -- Chevron
-                    ImageColor3 = Theme.SubText
+                local Chev = Utility:Create("ImageLabel", {
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(1,-30,0.5,-9),
+                    BackgroundTransparency = 1, Image = "rbxassetid://6031091004", ImageColor3 = Theme.SubText
                 })
                 
                 local List = Utility:Create("Frame", {
-                    Parent = DropCard,
-                    Size = UDim2.new(1, -24, 0, 0),
-                    Position = UDim2.new(0, 12, 0, 46),
-                    BackgroundTransparency = 1,
-                    ClipsDescendants = true
+                    Parent = Card, Size = UDim2.new(1,-24,0,0), Position = UDim2.new(0,12,0,42),
+                    BackgroundTransparency = 1, ClipsDescendants = true
                 })
-                local Layout = Utility:Create("UIListLayout", {Parent = List, Padding = UDim.new(0, 4)})
+                local Layout = Utility:Create("UIListLayout", {Parent = List, Padding = UDim.new(0,4)})
                 
                 for _, opt in ipairs(options) do
-                    local Btn = Utility:Create("TextButton", {
-                        Parent = List,
-                        Size = UDim2.new(1, 0, 0, 30),
-                        BackgroundColor3 = Theme.Background,
-                        Text = "  " .. opt,
-                        Font = Theme.Font,
-                        TextSize = 13,
-                        TextColor3 = Theme.SubText,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        AutoButtonColor = false
+                    local B = Utility:Create("TextButton", {
+                        Parent = List, Size = UDim2.new(1,0,0,30), BackgroundColor3 = Theme.Background,
+                        Text = "  "..opt, Font = Theme.Font, TextSize = 13, TextColor3 = Theme.SubText,
+                        TextXAlignment = Enum.TextXAlignment.Left, AutoButtonColor = false
                     })
-                    Utility:Round(Btn, 6)
-                    Btn.MouseButton1Click:Connect(function()
-                        Selected = opt
-                        Label.Text = text .. " : " .. opt
-                        if callback then callback(opt) end
-                        -- close
+                    Utility:Round(B, 4)
+                    B.MouseButton1Click:Connect(function()
+                        Selected = opt; Label.Text = text .. " : " .. opt; if callback then callback(opt) end
                         IsOpen = false
-                        Utility:Tween(DropCard, {Size = UDim2.new(1, 0, 0, 46)}, 0.2)
-                        Utility:Tween(Chevron, {Rotation = 0}, 0.2)
+                        Utility:Tween(Card, {Size = UDim2.new(1,0,0,42)})
+                        Utility:Tween(Chev, {Rotation = 0})
                     end)
                 end
                 
-                local Clicker = Utility:Create("TextButton", {
-                    Parent = DropCard,
-                    Size = UDim2.new(1,0,1,0),
-                    BackgroundTransparency = 1,
-                    Text = "",
-                    ZIndex = 10
-                })
-                Clicker.MouseButton1Click:Connect(function()
+                local Btn = Utility:Create("TextButton", {Parent = Card, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, Text = "", ZIndex = 2})
+                Btn.MouseButton1Click:Connect(function()
                     IsOpen = not IsOpen
                     if IsOpen then
                         local h = Layout.AbsoluteContentSize.Y + 10
-                        Utility:Tween(DropCard, {Size = UDim2.new(1, 0, 0, 46 + h)}, 0.2)
-                        Utility:Tween(Chevron, {Rotation = 180}, 0.2)
-                        -- Push zindex
-                        DropCard.ZIndex = 5
+                        Utility:Tween(Card, {Size = UDim2.new(1,0,0,42+h)})
+                        Utility:Tween(Chev, {Rotation = 180})
+                        Card.ZIndex = 5
                     else
-                        Utility:Tween(DropCard, {Size = UDim2.new(1, 0, 0, 46)}, 0.2)
-                        Utility:Tween(Chevron, {Rotation = 0}, 0.2)
-                        DropCard.ZIndex = 1
+                        Utility:Tween(Card, {Size = UDim2.new(1,0,0,42)})
+                        Utility:Tween(Chev, {Rotation = 0})
+                        Card.ZIndex = 1
                     end
                 end)
-                
                 return {Refresh = function() end}
             end
-            
-             --// COLOR PICKER //--
-            function Section:NewColorPicker(text, tip, default, callback)
-                local ColorCard = CreateCard(46)
-                local Def = default or Color3.new(1,1,1)
+
+            --// TEXTBOX
+            function Section:NewTextBox(text, tip, callback)
+                local Card = CreateCard(42)
                 
-                 local Icon = Utility:Create("ImageLabel", {
-                    Parent = ColorCard,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(0, 12, 0.5, -10),
-                    BackgroundTransparency = 1,
-                    Image = Icons.User, -- Placeholder
-                    ImageColor3 = Theme.SubText
+                local Icon = Utility:Create("ImageLabel", {
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(0,12,0.5,-9),
+                    BackgroundTransparency = 1, Image = Icons.Edit, ImageColor3 = Theme.SubText
+                })
+                
+                local Box = Utility:Create("TextBox", {
+                    Parent = Card, Size = UDim2.new(1,-50,1,0), Position = UDim2.new(0,40,0,0),
+                    BackgroundTransparency = 1, Text = "", PlaceholderText = text, Font = Theme.FontBold,
+                    TextSize = 13, TextColor3 = Theme.Text, PlaceholderColor3 = Theme.SubText,
+                    TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false
+                })
+                Box.FocusLost:Connect(function() if callback then callback(Box.Text) end end)
+            end
+
+            --// KEYBIND
+            function Section:NewKeybind(text, tip, default, callback)
+                local Card = CreateCard(42)
+                local Key = default or Enum.KeyCode.E
+                
+                local Icon = Utility:Create("ImageLabel", {
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(0,12,0.5,-9),
+                    BackgroundTransparency = 1, Image = Icons.Lock, ImageColor3 = Theme.SubText
                 })
                 
                 local Label = Utility:Create("TextLabel", {
-                    Parent = ColorCard,
-                    Text = text,
-                    Size = UDim2.new(1, -100, 1, 0),
-                    Position = UDim2.new(0, 44, 0, 0),
-                    BackgroundTransparency = 1,
-                    Font = Theme.FontBold,
-                    TextSize = 14,
-                    TextColor3 = Theme.Text,
+                    Parent = Card, Text = text, Size = UDim2.new(1,-100,1,0), Position = UDim2.new(0,40,0,0),
+                    BackgroundTransparency = 1, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.Text,
                     TextXAlignment = Enum.TextXAlignment.Left
                 })
                 
-                local Preview = Utility:Create("Frame", {
-                    Parent = ColorCard,
-                    Size = UDim2.new(0, 40, 0, 20),
-                    Position = UDim2.new(1, -52, 0.5, -10),
-                    BackgroundColor3 = Def
+                local Bind = Utility:Create("TextButton", {
+                    Parent = Card, Size = UDim2.new(0,80,0,24), Position = UDim2.new(1,-90,0.5,-12),
+                    BackgroundColor3 = Theme.Background, Text = Key.Name, Font = Theme.Font,
+                    TextSize = 12, TextColor3 = Theme.SubText, AutoButtonColor = false
                 })
-                Utility:Round(Preview, 6)
+                Utility:Round(Bind, 6)
                 
-                -- Simple randomizer
-                local Clicker = Utility:Create("TextButton", {
-                    Parent = ColorCard,
-                    Size = UDim2.new(1,0,1,0),
-                    BackgroundTransparency = 1, 
-                    Text = ""
+                local Listening = false
+                Bind.MouseButton1Click:Connect(function() Listening=true; Bind.Text="..."; Bind.TextColor3=Theme.Accent end)
+                UserInputService.InputBegan:Connect(function(i)
+                    if Listening and i.UserInputType==Enum.UserInputType.Keyboard then
+                        Key = i.KeyCode; Bind.Text = Key.Name; Bind.TextColor3 = Theme.SubText; Listening=false
+                        if callback then callback(Key) end
+                    elseif not Listening and i.KeyCode==Key then
+                        if callback then callback() end
+                    end
+                end)
+            end
+
+            --// COLOR PICKER
+            function Section:NewColorPicker(text, tip, default, callback)
+                local Card = CreateCard(42)
+                local Def = default or Color3.new(1,1,1)
+                
+                local Icon = Utility:Create("ImageLabel", {
+                    Parent = Card, Size = UDim2.new(0,18,0,18), Position = UDim2.new(0,12,0.5,-9),
+                    BackgroundTransparency = 1, Image = Icons.User, ImageColor3 = Theme.SubText
                 })
-                Clicker.MouseButton1Click:Connect(function()
-                    local r = Color3.fromHSV(math.random(), 0.9, 1)
-                    Preview.BackgroundColor3 = r
+                 
+                local Label = Utility:Create("TextLabel", {
+                    Parent = Card, Text = text, Size = UDim2.new(1,-100,1,0), Position = UDim2.new(0,40,0,0),
+                    BackgroundTransparency = 1, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.Text,
+                    TextXAlignment = Enum.TextXAlignment.Left
+                })
+                
+                local Prev = Utility:Create("TextButton", {
+                    Parent = Card, Size = UDim2.new(0,40,0,20), Position = UDim2.new(1,-50,0.5,-10),
+                    BackgroundColor3 = Def, Text = "", AutoButtonColor = false
+                })
+                Utility:Round(Prev, 4)
+                
+                Prev.MouseButton1Click:Connect(function()
+                    local r = Color3.fromHSV(math.random(),0.8,1); Prev.BackgroundColor3=r
                     if callback then callback(r) end
                 end)
             end
             
-            --// TEXTBOX //--
-            function Section:NewTextBox(text, tip, callback)
-                local Card = CreateCard(46)
-                 local Icon = Utility:Create("ImageLabel", {
-                    Parent = Card,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(0, 12, 0.5, -10),
-                    BackgroundTransparency = 1,
-                    Image = Icons.Edit,
-                    ImageColor3 = Theme.SubText
-                })
-                
-                 local Input = Utility:Create("TextBox", {
-                     Parent = Card,
-                     Size = UDim2.new(1, -56, 1, 0),
-                     Position = UDim2.new(0, 44, 0, 0),
-                     BackgroundTransparency = 1,
-                     Text = "",
-                     PlaceholderText = text,
-                     Font = Theme.FontBold,
-                     TextSize = 14,
-                     TextColor3 = Theme.Text,
-                     PlaceholderColor3 = Theme.SubText,
-                     TextXAlignment = Enum.TextXAlignment.Left,
-                     ClearTextOnFocus = false
-                 })
-                 
-                 Input.FocusLost:Connect(function() if callback then callback(Input.Text) end end)
-            end
-            
-             --// KEYBIND //--
-             function Section:NewKeybind(text, tip, default, callback)
-                local Card = CreateCard(46)
-                local Key = default or Enum.KeyCode.E
-                
-                 local Icon = Utility:Create("ImageLabel", {
-                    Parent = Card,
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Position = UDim2.new(0, 12, 0.5, -10),
-                    BackgroundTransparency = 1,
-                    Image = Icons.Lock,
-                    ImageColor3 = Theme.SubText
-                })
-                
-                local Label = Utility:Create("TextLabel", {
-                    Parent = Card,
-                    Text = text,
-                    Size = UDim2.new(1, -100, 1, 0),
-                    Position = UDim2.new(0, 44, 0, 0),
-                    BackgroundTransparency = 1,
-                    Font = Theme.FontBold,
-                    TextSize = 14,
-                    TextColor3 = Theme.Text,
-                    TextXAlignment = Enum.TextXAlignment.Left
-                })
-                
-                local BindBtn = Utility:Create("TextButton", {
-                    Parent = Card,
-                    Size = UDim2.new(0, 80, 0, 24),
-                    Position = UDim2.new(1, -92, 0.5, -12),
-                    BackgroundColor3 = Theme.Background,
-                    Text = Key.Name,
-                    Font = Theme.Font,
-                    TextSize = 12,
-                    TextColor3 = Theme.SubText
-                })
-                Utility:Round(BindBtn, 6)
-                
-                local Listening = false
-                BindBtn.MouseButton1Click:Connect(function() 
-                    Listening = true 
-                    BindBtn.Text = "..."
-                    BindBtn.TextColor3 = Theme.Accent
-                end)
-                UserInputService.InputBegan:Connect(function(i)
-                    if Listening and i.UserInputType == Enum.UserInputType.Keyboard then
-                        Key = i.KeyCode
-                        BindBtn.Text = Key.Name
-                        BindBtn.TextColor3 = Theme.SubText
-                        Listening = false
-                        if callback then callback(Key) end
-                    elseif not Listening and i.KeyCode == Key then
-                         if callback then callback() end
-                    end
-                end)
-             end
-
             return Section
         end
         return Tab
