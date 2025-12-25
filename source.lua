@@ -1200,63 +1200,6 @@ local function CreateLibraryUI(name)
 	return Library:AddWindow(name)
 end
 
--- Wrapper to handle Config options
-function Library:AddWindow(name, options)
-	options = options or {}
-	
-	-- 1. Setup Logic
-	local function Init()
-		-- Call the internal constructor (was renamed to CreateLibraryUI)
-		return CreateLibraryUI(name)
-	end
-	
-	-- 2. Chain Flows
-	if options.KeySystem then
-		-- Start Key System
-		-- Since we can't yield the main thread safely without blocking the script return (which needs to return the window object for Tabs),
-		-- we have to allow the Window to be created BUT hidden.
-		
-		-- Create Hidden Window
-		local Window = Init()
-		if Library.Main then Library.Main.Visible = false end -- Hide
-		
-		-- Start Key System -> Loading -> Show
-		local KeyUrl = "https://raw.githubusercontent.com/sszxx/keys/refs/heads/main/keys.json"
-		StartKeySystem(KeyUrl, function()
-			-- Key Valid
-			StartLoading(function()
-				-- Show UI
-				if Library.Main then
-					Library.Main.Visible = true
-					-- Intro Anim
-					Library.Main.Position = UDim2.new(0.5, 0, 0.55, 0)
-					Tween(Library.Main, {Position = UDim2.new(0.5, 0, 0.5, 0)})
-				end
-			end)
-		end)
-		
-		return Window
-	else
-		-- Just Loading or Direct? User asked "make ... 2-6 seconds loading".
-		-- It seems this should apply always if enabled?
-		-- "make that when i execute it make some 2-6 seconds loading"
-		-- I'll implement loading as default if no config, OR as part of key system flow.
-		-- I'll assume loading is wanted always.
-		
-		local Window = Init()
-		if Library.Main then Library.Main.Visible = false end
-		
-		StartLoading(function()
-			if Library.Main then
-				Library.Main.Visible = true
-				Library.Main.Position = UDim2.new(0.5, 0, 0.55, 0)
-				Tween(Library.Main, {Position = UDim2.new(0.5, 0, 0.5, 0)})
-			end
-		end)
-		
-		return Window
-	end
-end
 
 return Library
 
