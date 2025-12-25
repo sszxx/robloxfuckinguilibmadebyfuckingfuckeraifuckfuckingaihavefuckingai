@@ -265,17 +265,19 @@ function Library:AddWindow(name)
 		BackgroundColor3 = CurrentTheme.Main,
 		Size = UDim2.new(0, 30, 0, 30),
 		Text = "",
-		AutoButtonColor = false
+		AutoButtonColor = false,
+		ZIndex = 5
 	})
 	Create("UICorner", {Parent = Bomb, CornerRadius = UDim.new(0, 6)})
 	Create("ImageLabel", {
 		Parent = Bomb,
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://6031094678", -- Close Icon (X)
+		Image = "rbxassetid://3944676151", -- Close Icon
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 20, 0, 20),
-		ImageColor3 = Color3.fromRGB(200, 50, 50)
+		Size = UDim2.new(0, 16, 0, 16),
+		ImageColor3 = Color3.fromRGB(200, 50, 50),
+		ZIndex = 6
 	})
 	
 	local Gear = Create("TextButton", {
@@ -285,17 +287,19 @@ function Library:AddWindow(name)
 		Size = UDim2.new(0, 30, 0, 30),
 		Position = UDim2.new(0, 35, 0, 0),
 		Text = "",
-		AutoButtonColor = false
+		AutoButtonColor = false,
+		ZIndex = 5
 	})
 	Create("UICorner", {Parent = Gear, CornerRadius = UDim.new(0, 6)})
 	Create("ImageLabel", {
 		Parent = Gear,
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://6031280882", -- Settings Gear Icon
+		Image = "rbxassetid://3944676352", -- Gear Icon
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 20, 0, 20),
-		ImageColor3 = CurrentTheme.Text
+		Size = UDim2.new(0, 16, 0, 16),
+		ImageColor3 = CurrentTheme.Text,
+		ZIndex = 6
 	})
 	
 	-- Content Area
@@ -379,13 +383,15 @@ function Library:AddWindow(name)
 			-- Deactivate current tab visually
 			local oldBtn = Library.ActiveTab.Button
 			Tween(oldBtn.Frame, {BackgroundTransparency = 1})
-			Tween(oldBtn.Text, {TextColor3 = CurrentTheme.TextDark})
+			if typeof(oldBtn.Text) == "Instance" then
+				Tween(oldBtn.Text, {TextColor3 = CurrentTheme.TextDark})
+			end
 			oldBtn.Indicator.Visible = false
 			Library.ActiveTab.Page.Visible = false
 			
 			-- Activate Settings
 			SettingsPage.Visible = true
-			Library.ActiveTab = {Button = {Frame = Gear, Text = {TextColor3 = Color3.new(1,1,1)}, Indicator = {Visible=false}}, Page = SettingsPage}
+			Library.ActiveTab = {Button = {Frame = Gear, Text = {}, Indicator = {Visible=false}}, Page = SettingsPage}
 		end
 	end)
 	
@@ -677,7 +683,9 @@ function Library:AddWindow(name)
 			if Library.ActiveTab then
 				local oldBtn = Library.ActiveTab.Button
 				Tween(oldBtn.Frame, {BackgroundTransparency = 1})
-				Tween(oldBtn.Text, {TextColor3 = CurrentTheme.TextDark})
+				if typeof(oldBtn.Text) == "Instance" then
+					Tween(oldBtn.Text, {TextColor3 = CurrentTheme.TextDark})
+				end
 				oldBtn.Indicator.Visible = false
 				Library.ActiveTab.Page.Visible = false
 			end
