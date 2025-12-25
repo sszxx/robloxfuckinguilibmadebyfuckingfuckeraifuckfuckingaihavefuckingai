@@ -192,7 +192,7 @@ end
 
 --// Main UI Logic
 
-local function CreateLibraryUI(name)
+function Library:AddWindow(name)
 	name = name or "UI Library"
 	
 	local ScreenGui = Create("ScreenGui", {
@@ -295,7 +295,7 @@ local function CreateLibraryUI(name)
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Size = UDim2.new(0, 20, 0, 20),
-		ImageColor3 = CurrentTheme.Text,
+		ImageColor3 = Color3.fromRGB(200, 50, 50),
 		ZIndex = 6
 	})
 	
@@ -1200,6 +1200,4 @@ local function CreateLibraryUI(name)
 	return Library:AddWindow(name)
 end
 
-
 return Library
-
