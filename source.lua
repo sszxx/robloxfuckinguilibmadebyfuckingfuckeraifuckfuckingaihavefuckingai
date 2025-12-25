@@ -299,7 +299,7 @@ function Library:AddWindow(name, options)
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		BackgroundColor3 = CurrentTheme.Main,
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 750, 0, 480),
+		Size = UDim2.new(0, 600, 0, 450),
 		BorderSizePixel = 0,
 		ClipsDescendants = true
 	})
@@ -1084,19 +1084,18 @@ function Library:AddWindow(name, options)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						local dragging = true
 						UpdateSV(input)
-						local con
-						con = UserInputService.InputChanged:Connect(function(MoveInput)
+						local inputChanged, inputEnded
+						
+						inputChanged = UserInputService.InputChanged:Connect(function(MoveInput)
 							if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
 								UpdateSV(MoveInput)
 							end
 						end)
 						
-						local endCon
-						endCon = UserInputService.InputEnded:Connect(function(EndInput)
+						inputEnded = UserInputService.InputEnded:Connect(function(EndInput)
 							if EndInput.UserInputType == Enum.UserInputType.MouseButton1 then
-								dragging = false
-								con:Disconnect()
-								endCon:Disconnect()
+								inputChanged:Disconnect()
+								inputEnded:Disconnect()
 							end
 						end)
 					end
@@ -1104,21 +1103,19 @@ function Library:AddWindow(name, options)
 				
 				HueBar.InputBegan:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						local dragging = true
 						UpdateHue(input)
-						local con
-						con = UserInputService.InputChanged:Connect(function(MoveInput)
+						local inputChanged, inputEnded
+						
+						inputChanged = UserInputService.InputChanged:Connect(function(MoveInput)
 							if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
 								UpdateHue(MoveInput)
 							end
 						end)
 						
-						local endCon
-						endCon = UserInputService.InputEnded:Connect(function(EndInput)
+						inputEnded = UserInputService.InputEnded:Connect(function(EndInput)
 							if EndInput.UserInputType == Enum.UserInputType.MouseButton1 then
-								dragging = false
-								con:Disconnect()
-								endCon:Disconnect()
+								inputChanged:Disconnect()
+								inputEnded:Disconnect()
 							end
 						end)
 					end
@@ -1149,6 +1146,39 @@ function Library:AddWindow(name, options)
 		
 		return TabObj
 	end
+	
+	-- Toggle Key Logic (Left Alt) & Blur
+	local Blur = Create("BlurEffect", {
+		Parent = game:GetService("Lighting"),
+		Size = 0,
+		Name = "ModernUI_Blur"
+	})
+	
+	local toggled = true
+	local function ToggleUI()
+		toggled = not toggled
+		local targetPos = toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, 0, 1.5, 0) -- Slide down animation
+		
+		-- Use global Tween function if accessible, otherwise creating new one
+		TweenService:Create(Library.Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Position = targetPos
+		}):Play()
+		
+		TweenService:Create(Blur, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Size = toggled and 24 or 0
+		}):Play()
+	end
+	
+	UserInputService.InputBegan:Connect(function(input, gp)
+		if not gp and input.KeyCode == Enum.KeyCode.LeftAlt then
+			ToggleUI()
+		end
+	end)
+	
+	-- Initial Blur State
+	TweenService:Create(Blur, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = 24
+	}):Play()
 	
 	-- If text was provided to AddWindow, create that initial tab
 	return Library:AddWindow(name)
