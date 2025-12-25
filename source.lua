@@ -441,16 +441,59 @@ local function StartKeySystem(keysUrl, callback)
 	end)
 	
 	GetKey.MouseButton1Click:Connect(function()
-		setclipboard("https://pastebin.com/raw/example") -- User didn't provide get key link, placeholder
-		GetKey.Text = "LINK COPIED"
-		task.wait(1)
-		GetKey.Text = "GET KEY"
+		if setclipboard then
+			setclipboard("https://www.youtube.com/watch?v=VgJmiPsC8cM")
+			GetKey.Text = "LINK COPIED"
+			task.wait(1)
+			GetKey.Text = "GET KEY"
+		else
+			GetKey.Text = "Check Console"
+			print("Get Key Link: https://www.youtube.com/watch?v=VgJmiPsC8cM")
+		end
 	end)
 end
 
 --// Main UI Logic
 
-	return Library:AddWindow(name)
+-- Wrapper to handle Config options
+function Library:AddWindow(name, options)
+	options = options or {}
+	
+	-- 1. Setup Logic
+	local function Init()
+		return CreateLibraryUI(name)
+	end
+	
+	-- 2. Chain Flows
+	-- User Request: Execute -> Loading (2-6s) -> Key System (Popup) -> Main UI
+	
+	-- Start Hidden Window
+	local Window = Init()
+	if Library.Main then Library.Main.Visible = false end
+	
+	StartLoading(function()
+		-- Loading Finished. Check Key System.
+		if options.KeySystem then
+			local KeyUrl = "https://raw.githubusercontent.com/sszxx/keys/refs/heads/main/keys.json"
+			StartKeySystem(KeyUrl, function()
+				-- Key Validated. Show UI.
+				if Library.Main then
+					Library.Main.Visible = true
+					Library.Main.Position = UDim2.new(0.5, 0, 0.55, 0)
+					Tween(Library.Main, {Position = UDim2.new(0.5, 0, 0.5, 0)})
+				end
+			end)
+		else
+			-- No Key System. Show UI directly.
+			if Library.Main then
+				Library.Main.Visible = true
+				Library.Main.Position = UDim2.new(0.5, 0, 0.55, 0)
+				Tween(Library.Main, {Position = UDim2.new(0.5, 0, 0.5, 0)})
+			end
+		end
+	end)
+	
+	return Window
 end
 
 local function CreateLibraryUI(name)
