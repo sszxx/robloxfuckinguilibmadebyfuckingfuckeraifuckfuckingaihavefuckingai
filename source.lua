@@ -406,28 +406,22 @@ local function StartKeySystem(keysUrl, callback)
 	-- Logic
 	Submit.MouseButton1Click:Connect(function()
 		Status.Text = "Checking..."
-		Status.TextColor3 = Color3.fromRGB(200, 200, 200)
+		Status.TextColor3 = CurrentTheme.TextDark
 		
 		task.spawn(function()
-			local s, r = pcall(function() return game:HttpGet(keysUrl) end)
-			if s then
-				local valid = false
-				local data = game:GetService("HttpService"):JSONDecode(r)
-				for _, k in pairs(data) do
-					if string.find(k, TextBox.Text) or k == TextBox.Text then
-						valid = true
-						break
-					end
-				end
+			-- Fix: Use correct Raw URL structure
+			local targetUrl = "https://raw.githubusercontent.com/sszxx/keys/main/keys.json"
+			
+			local success, result = pcall(function()
+				return game:HttpGet(targetUrl)
+			end)
+			
+			if success then
+				local HttpService = game:GetService("HttpService")
+				local decodeSuccess, keys = pcall(function()
+					return HttpService:JSONDecode(result)
+				end)
 				
-				if valid then
-					Status.Text = "ACCESS GRANTED"
-					Status.TextColor3 = Color3.fromRGB(50, 255, 100)
-					task.wait(1)
-					Tween(Container, {GroupTransparency = 1, Position = UDim2.new(0.5, 0, 0.6, 0)}, 0.5)
-					Tween(Blur, {Size = 0}, 0.5)
-					task.wait(0.5)
-					KeyGui:Destroy()
 					Blur:Destroy()
 					callback()
 				else
@@ -474,7 +468,7 @@ function Library:AddWindow(name, options)
 	StartLoading(function()
 		-- Loading Finished. Check Key System.
 		if options.KeySystem then
-			local KeyUrl = "https://raw.githubusercontent.com/sszxx/keys/refs/heads/main/keys.json"
+			local KeyUrl = "https://raw.githubusercontent.com/sszxx/keys/main/keys.json"
 			StartKeySystem(KeyUrl, function()
 				-- Key Validated. Show UI.
 				if Library.Main then
