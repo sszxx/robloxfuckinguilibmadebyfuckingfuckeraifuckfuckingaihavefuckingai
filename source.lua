@@ -271,10 +271,10 @@ function Library:AddWindow(name)
 	Create("ImageLabel", {
 		Parent = Bomb,
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://7072718326", -- Close/Trash Icon (Generic) - Replacing with standard icon
+		Image = "rbxassetid://6031094678", -- Close Icon (X)
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 16, 0, 16),
+		Size = UDim2.new(0, 20, 0, 20),
 		ImageColor3 = Color3.fromRGB(200, 50, 50)
 	})
 	
@@ -291,10 +291,10 @@ function Library:AddWindow(name)
 	Create("ImageLabel", {
 		Parent = Gear,
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://7072719641", -- Gear Icon
+		Image = "rbxassetid://6031280882", -- Settings Gear Icon
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 16, 0, 16),
+		Size = UDim2.new(0, 20, 0, 20),
 		ImageColor3 = CurrentTheme.Text
 	})
 	
@@ -321,7 +321,6 @@ function Library:AddWindow(name)
 	end)
 	
 	-- Settings Page Logic
-	-- We create a special page for Settings
 	local SettingsPage = Create("ScrollingFrame", {
 		Name = "Internal_Settings_Page",
 		Parent = ContentArea,
@@ -336,9 +335,6 @@ function Library:AddWindow(name)
 		SortOrder = Enum.SortOrder.LayoutOrder,
 		Padding = UDim.new(0, 10)
 	})
-	
-	-- Re-use AddSection logic for settings... but we need a virtual Tab object
-	-- Simplified: Manually build settings section
 	
 	local SettingsSection = Create("Frame", {
 		Name = "SettingsSection",
@@ -379,17 +375,18 @@ function Library:AddWindow(name)
 	
 	-- Gear Logic
 	Gear.MouseButton1Click:Connect(function()
-		if Library.ActiveTab then
-			-- Deactivate others
+		if Library.ActiveTab and Library.ActiveTab.Page ~= SettingsPage then
+			-- Deactivate current tab visually
 			local oldBtn = Library.ActiveTab.Button
 			Tween(oldBtn.Frame, {BackgroundTransparency = 1})
 			Tween(oldBtn.Text, {TextColor3 = CurrentTheme.TextDark})
 			oldBtn.Indicator.Visible = false
 			Library.ActiveTab.Page.Visible = false
+			
+			-- Activate Settings
+			SettingsPage.Visible = true
+			Library.ActiveTab = {Button = {Frame = Gear, Text = {TextColor3 = Color3.new(1,1,1)}, Indicator = {Visible=false}}, Page = SettingsPage}
 		end
-		-- Toggle/Show Settings
-		SettingsPage.Visible = true
-		Library.ActiveTab = {Button = {Frame = Gear, Text = {TextColor3 = Color3.new(1,1,1)}, Indicator = {Visible=false}}, Page = SettingsPage}
 	end)
 	
 	-- Helper to add internal elements
@@ -684,6 +681,9 @@ function Library:AddWindow(name)
 				oldBtn.Indicator.Visible = false
 				Library.ActiveTab.Page.Visible = false
 			end
+			
+			-- Force Hide Settings
+			SettingsPage.Visible = false
 			
 			Library.ActiveTab = {
 				Button = {Frame=TabButton, Text=TabButton, Indicator=Indicator}, 
