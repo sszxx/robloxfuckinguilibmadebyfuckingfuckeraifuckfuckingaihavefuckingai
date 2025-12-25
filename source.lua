@@ -190,9 +190,270 @@ local function Ripple(button)
 	end)
 end
 
+--// Loading & Key System Utils
+
+local function StartLoading(callback)
+	local LoadingGui = Create("ScreenGui", {
+		Name = "ModernUI_Loading",
+		Parent = CoreGui,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		IgnoreGuiInset = true 
+	})
+	
+	local Background = Create("Frame", {
+		Parent = LoadingGui,
+		BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+		Size = UDim2.new(1, 0, 1, 0),
+		ZIndex = 1000
+	})
+	
+	-- Logo / Title
+	local Title = Create("TextLabel", {
+		Parent = Background,
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0.5, 0, 0.45, 0),
+		Size = UDim2.new(0, 0, 0, 0),
+		Font = Enum.Font.GothamBold,
+		Text = "MODERN UI",
+		TextColor3 = CurrentTheme.Accent,
+		TextSize = 36,
+		TextTransparency = 1,
+		ZIndex = 1001
+	})
+	
+	local Subtitle = Create("TextLabel", {
+		Parent = Background,
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0.5, 0, 0.52, 0),
+		Size = UDim2.new(0, 0, 0, 0),
+		Font = Enum.Font.Gotham,
+		Text = "INITIALIZING...",
+		TextColor3 = Color3.fromRGB(150, 150, 150),
+		TextSize = 12,
+		TextTransparency = 1,
+		ZIndex = 1001
+	})
+	
+	local BarBG = Create("Frame", {
+		Parent = Background,
+		BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+		Position = UDim2.new(0.5, -120, 0.6, 0),
+		Size = UDim2.new(0, 240, 0, 4),
+		BorderSizePixel = 0,
+		BackgroundTransparency = 1,
+		ZIndex = 1001
+	})
+	Create("UICorner", {Parent = BarBG, CornerRadius = UDim.new(1, 0)})
+	
+	local BarFill = Create("Frame", {
+		Parent = BarBG,
+		BackgroundColor3 = CurrentTheme.Accent,
+		Size = UDim2.new(0, 0, 1, 0),
+		BorderSizePixel = 0,
+		ZIndex = 1002
+	})
+	Create("UICorner", {Parent = BarFill, CornerRadius = UDim.new(1, 0)})
+	
+	-- Shadow
+	local Shadow = Create("ImageLabel", {
+		Parent = BarBG,
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://6015897843",
+		ImageColor3 = Color3.new(0,0,0),
+		ImageTransparency = 0.5,
+		Position = UDim2.new(0, -15, 0, -15),
+		Size = UDim2.new(1, 30, 1, 30),
+		SliceCenter = Rect.new(49, 49, 450, 450),
+		ScaleType = Enum.ScaleType.Slice,
+		ZIndex = 1000
+	})
+
+	-- Animation
+	Tween(Title, {TextTransparency = 0}, 0.5)
+	task.wait(0.2)
+	Tween(Subtitle, {TextTransparency = 0}, 0.5)
+	task.wait(0.3)
+	Tween(BarBG, {BackgroundTransparency = 0}, 0.5)
+	
+	local loadTime = math.random(20, 60) / 10 -- 2.0 to 6.0 seconds
+	local start = tick()
+	
+	while tick() - start < loadTime do
+		local alpha = math.min((tick() - start) / loadTime, 1)
+		local eased = 1 - math.pow(1 - alpha, 3) 
+		BarFill.Size = UDim2.new(eased, 0, 1, 0)
+		
+		if alpha > 0.2 and alpha < 0.5 then Subtitle.Text = "LOADING ASSETS..." end
+		if alpha > 0.5 and alpha < 0.8 then Subtitle.Text = "VERIFYING KEY..." end
+		if alpha > 0.8 then Subtitle.Text = "STARTING..." end
+		
+		RunService.RenderStepped:Wait()
+	end
+	
+	-- Close
+	Tween(Title, {TextTransparency = 1}, 0.5)
+	Tween(Subtitle, {TextTransparency = 1}, 0.5)
+	Tween(BarBG, {BackgroundTransparency = 1}, 0.5)
+	Tween(BarFill, {BackgroundTransparency = 1}, 0.5)
+	Tween(Background, {BackgroundTransparency = 1}, 0.5)
+	task.wait(0.5)
+	LoadingGui:Destroy()
+	if callback then callback() end
+end
+
+local function StartKeySystem(keysUrl, callback)
+	local KeyGui = Create("ScreenGui", {
+		Name = "ModernUI_Key",
+		Parent = CoreGui,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		IgnoreGuiInset = true
+	})
+	
+	local Blur = Create("BlurEffect", {
+		Parent = game:GetService("Lighting"),
+		Size = 0
+	})
+	Tween(Blur, {Size = 15}, 0.5)
+	
+	local Container = Create("Frame", {
+		Parent = KeyGui,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+		Position = UDim2.new(0.5, 0, 0.5, 20), -- Start offset
+		Size = UDim2.new(0, 400, 0, 220),
+		BackgroundTransparency = 1
+	})
+	Create("UICorner", {Parent = Container, CornerRadius = UDim.new(0, 8)})
+	Create("UIStroke", {Parent = Container, Color = Color3.fromRGB(60, 60, 60), Thickness = 1})
+	
+	local Title = Create("TextLabel", {
+		Parent = Container,
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0, 0, 0, 20),
+		Size = UDim2.new(1, 0, 0, 30),
+		Font = Enum.Font.GothamBold,
+		Text = "AUTHENTICATION",
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = 18
+	})
+	
+	local Subtitle = Create("TextLabel", {
+		Parent = Container,
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0, 0, 0, 50),
+		Size = UDim2.new(1, 0, 0, 30),
+		Font = Enum.Font.Gotham,
+		Text = "Enter your key to access the script.",
+		TextColor3 = Color3.fromRGB(150, 150, 150),
+		TextSize = 14
+	})
+	
+	local TextBox = Create("TextBox", {
+		Parent = Container,
+		BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+		Position = UDim2.new(0.5, -160, 0, 90),
+		Size = UDim2.new(0, 320, 0, 40),
+		Font = Enum.Font.Gotham,
+		PlaceholderText = "Enter key here...",
+		Text = "",
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = 14,
+		ClearTextOnFocus = false
+	})
+	Create("UICorner", {Parent = TextBox, CornerRadius = UDim.new(0, 6)})
+	Create("UIStroke", {Parent = TextBox, Color = Color3.fromRGB(60, 60, 60), Thickness = 1})
+	
+	local Submit = Create("TextButton", {
+		Parent = Container,
+		BackgroundColor3 = CurrentTheme.Accent,
+		Position = UDim2.new(0.5, -160, 0, 145),
+		Size = UDim2.new(0, 150, 0, 40),
+		Font = Enum.Font.GothamBold,
+		Text = "SUBMIT",
+		TextColor3 = Color3.new(1,1,1),
+		TextSize = 14,
+		AutoButtonColor = false
+	})
+	Create("UICorner", {Parent = Submit, CornerRadius = UDim.new(0, 6)})
+	
+	local GetKey = Create("TextButton", {
+		Parent = Container,
+		BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+		Position = UDim2.new(0.5, 10, 0, 145),
+		Size = UDim2.new(0, 150, 0, 40),
+		Font = Enum.Font.GothamBold,
+		Text = "GET KEY",
+		TextColor3 = Color3.fromRGB(200, 200, 200),
+		TextSize = 14,
+		AutoButtonColor = false
+	})
+	Create("UICorner", {Parent = GetKey, CornerRadius = UDim.new(0, 6)})
+	
+	local Status = Create("TextLabel", {
+		Parent = Container,
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0, 0, 1, -25),
+		Size = UDim2.new(1, 0, 0, 20),
+		Font = Enum.Font.Gotham,
+		Text = "",
+		TextColor3 = Color3.fromRGB(255, 50, 50),
+		TextSize = 12
+	})
+	
+	-- Animations
+	Tween(Container, {BackgroundTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.5, Enum.EasingStyle.Quint)
+	
+	-- Logic
+	Submit.MouseButton1Click:Connect(function()
+		Status.Text = "Checking..."
+		Status.TextColor3 = Color3.fromRGB(200, 200, 200)
+		
+		task.spawn(function()
+			local s, r = pcall(function() return game:HttpGet(keysUrl) end)
+			if s then
+				local valid = false
+				local data = game:GetService("HttpService"):JSONDecode(r)
+				for _, k in pairs(data) do
+					if string.find(k, TextBox.Text) or k == TextBox.Text then
+						valid = true
+						break
+					end
+				end
+				
+				if valid then
+					Status.Text = "ACCESS GRANTED"
+					Status.TextColor3 = Color3.fromRGB(50, 255, 100)
+					task.wait(1)
+					Tween(Container, {GroupTransparency = 1, Position = UDim2.new(0.5, 0, 0.6, 0)}, 0.5)
+					Tween(Blur, {Size = 0}, 0.5)
+					task.wait(0.5)
+					KeyGui:Destroy()
+					Blur:Destroy()
+					callback()
+				else
+					Status.Text = "INVALID KEY"
+					Status.TextColor3 = Color3.fromRGB(255, 50, 50)
+				end
+			else
+				Status.Text = "ERROR FETCHING KEYS"
+			end
+		end)
+	end)
+	
+	GetKey.MouseButton1Click:Connect(function()
+		setclipboard("https://pastebin.com/raw/example") -- User didn't provide get key link, placeholder
+		GetKey.Text = "LINK COPIED"
+		task.wait(1)
+		GetKey.Text = "GET KEY"
+	end)
+end
+
 --// Main UI Logic
 
-function Library:AddWindow(name)
+	return Library:AddWindow(name)
+end
+
+local function CreateLibraryUI(name)
 	name = name or "UI Library"
 	
 	local ScreenGui = Create("ScreenGui", {
@@ -295,7 +556,7 @@ function Library:AddWindow(name)
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Size = UDim2.new(0, 20, 0, 20),
-		ImageColor3 = Color3.fromRGB(200, 50, 50),
+		ImageColor3 = CurrentTheme.Text,
 		ZIndex = 6
 	})
 	
@@ -1200,4 +1461,63 @@ function Library:AddWindow(name)
 	return Library:AddWindow(name)
 end
 
+-- Wrapper to handle Config options
+function Library:AddWindow(name, options)
+	options = options or {}
+	
+	-- 1. Setup Logic
+	local function Init()
+		-- Call the internal constructor (was renamed to CreateLibraryUI)
+		return CreateLibraryUI(name)
+	end
+	
+	-- 2. Chain Flows
+	if options.KeySystem then
+		-- Start Key System
+		-- Since we can't yield the main thread safely without blocking the script return (which needs to return the window object for Tabs),
+		-- we have to allow the Window to be created BUT hidden.
+		
+		-- Create Hidden Window
+		local Window = Init()
+		if Library.Main then Library.Main.Visible = false end -- Hide
+		
+		-- Start Key System -> Loading -> Show
+		local KeyUrl = "https://raw.githubusercontent.com/sszxx/keys/refs/heads/main/keys.json"
+		StartKeySystem(KeyUrl, function()
+			-- Key Valid
+			StartLoading(function()
+				-- Show UI
+				if Library.Main then
+					Library.Main.Visible = true
+					-- Intro Anim
+					Library.Main.Position = UDim2.new(0.5, 0, 0.55, 0)
+					Tween(Library.Main, {Position = UDim2.new(0.5, 0, 0.5, 0)})
+				end
+			end)
+		end)
+		
+		return Window
+	else
+		-- Just Loading or Direct? User asked "make ... 2-6 seconds loading".
+		-- It seems this should apply always if enabled?
+		-- "make that when i execute it make some 2-6 seconds loading"
+		-- I'll implement loading as default if no config, OR as part of key system flow.
+		-- I'll assume loading is wanted always.
+		
+		local Window = Init()
+		if Library.Main then Library.Main.Visible = false end
+		
+		StartLoading(function()
+			if Library.Main then
+				Library.Main.Visible = true
+				Library.Main.Position = UDim2.new(0.5, 0, 0.55, 0)
+				Tween(Library.Main, {Position = UDim2.new(0.5, 0, 0.5, 0)})
+			end
+		end)
+		
+		return Window
+	end
+end
+
 return Library
+
