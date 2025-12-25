@@ -92,6 +92,25 @@ local function Create(class, properties)
 	return instance
 end
 
+local function GetAsset(id)
+	if id == nil then return "" end
+	if not string.find(id, "rbxassetid://") and not tonumber(id) then 
+		-- Assume URL
+		if not isfile or not writefile or not getcustomasset then
+			return id -- Executor doesn't support custom assets, return as is (might fail if URL)
+		end
+		
+		local fileName = "ModernUI_" .. string.gsub(id, "%W", "") .. ".png"
+		if not isfile(fileName) then
+			writefile(fileName, game:HttpGet(id))
+		end
+		return getcustomasset(fileName)
+	elseif tonumber(id) then
+		return "rbxassetid://" .. id
+	end
+	return id
+end
+
 local function Tween(instance, properties, time, style, direction)
 	local info = TweenInfo.new(
 		time or 0.2, 
@@ -272,7 +291,7 @@ function Library:AddWindow(name)
 	Create("ImageLabel", {
 		Parent = Bomb,
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://3944676151", -- Close Icon
+		Image = GetAsset("https://www.shutterstock.com/image-vector/bomb-dynamite-simple-logo-white-260nw-1696462141.jpg"),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Size = UDim2.new(0, 16, 0, 16),
@@ -294,7 +313,7 @@ function Library:AddWindow(name)
 	Create("ImageLabel", {
 		Parent = Gear,
 		BackgroundTransparency = 1,
-		Image = "rbxassetid://3944676352", -- Gear Icon
+		Image = GetAsset("https://www.freeiconspng.com/uploads/white-gear-png-gear-icon-png-white-gear-icon-30.png"),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Size = UDim2.new(0, 16, 0, 16),
